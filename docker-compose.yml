@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: hotel_db
+      POSTGRES_USER: hotel_user
+      POSTGRES_PASSWORD: hotel_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build:
+      context: ./hotel_bnb   # путь к корню проекта, где лежит manage.py
+    command: gunicorn hotel_bnb.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    volumes:
+      - ./hotel_bnb.hotel_bnb:/app   # монтируем проект внутрь контейнера
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: hotel_bnb.settings
+      PYTHONUNBUFFERED: 1
+      POSTGRES_DB: hotel_db
+      POSTGRES_USER: hotel_user
+      POSTGRES_PASSWORD: hotel_pass
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
